@@ -1,0 +1,1 @@
+# kaito-scratch-card-v2
