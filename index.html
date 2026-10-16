@@ -1,0 +1,208 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kaito's Scratch Cards</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;min-height:100vh;padding:32px 16px;
+ font-family:Arial,sans-serif;color:white;text-align:center;
+ background:
+ radial-gradient(ellipse at 15% 10%,#344a8580,transparent 38%),
+ radial-gradient(ellipse at 90% 80%,#583c8b70,transparent 40%),
+ linear-gradient(135deg,#0b1025,#211b45 65%,#101a37);
+}
+header{max-width:800px;margin:10px auto 32px}
+h1{font-size:clamp(30px,5vw,46px);color:#91e8ff;
+ text-shadow:0 0 18px #56cfff80;margin:0 0 14px}
+.subtitle{color:#e0e0ff;line-height:1.7}
+.tag{display:inline-block;margin-top:8px;padding:8px 14px;
+ border:1px solid #9d8bff77;border-radius:99px;
+ color:#ddd4ff;font-size:12px}
+.cards{display:flex;justify-content:center;flex-wrap:wrap;
+ gap:20px;max-width:950px;margin:auto}
+.card{
+ width:270px;padding:16px;border:1px solid #9d8bff88;
+ border-radius:22px;background:linear-gradient(150deg,#292653,#171b3b);
+ box-shadow:0 14px 35px #0004;transition:.2s;
+}
+.card.selectable{cursor:pointer}
+.card.selectable:hover{transform:translateY(-4px);
+ border-color:#91e8ff;box-shadow:0 0 22px #70cfff55}
+.card.chosen{border:2px solid #91e8ff;
+ box-shadow:0 0 12px #70cfff88,0 0 30px #8272ff44}
+.card.locked{opacity:.62;filter:saturate(.5)}
+.card h2{font-size:19px;margin:4px 0 16px}
+.number{display:inline-block;background:#7164c9;
+ padding:7px 13px;border-radius:99px}
+.scratch-area{height:190px;position:relative;
+ overflow:hidden;border-radius:14px;background:#fff0c8}
+.prize{position:absolute;inset:0;display:flex;
+ flex-direction:column;align-items:center;justify-content:center;
+ gap:7px;color:#29204f;font-size:21px;font-weight:bold;
+ line-height:1.3;padding:12px;pointer-events:none}
+.emoji{font-size:34px}
+canvas{position:absolute;inset:0;width:100%;height:100%;
+ touch-action:none;cursor:crosshair}
+.hint{font-size:12px;color:#d7d2ff;margin:14px 0 2px}
+footer{max-width:650px;margin:30px auto 0;padding:12px;
+ border:1px solid #a89aff66;border-radius:16px;
+ color:#dcd8ff;font-size:12px;line-height:1.6}
+@media(max-width:600px){
+ body{padding:24px 12px}
+ .cards{gap:16px}
+ .card{width:min(100%,340px)}
+ .scratch-area{height:185px}
+}
+</style>
+</head>
+<body>
+<header>
+ <h1>✦ Kaito's Scratch Cards ✦</h1>
+ <p class="subtitle">
+  Choose ONE card and scratch to reveal its demo prize!<br>
+  Pilih SATU kartu, lalu gosok untuk melihat hadiah demo.
+ </p>
+ <span class="tag">✧ A little magic made by Kaito ✧</span>
+</header>
+
+<main class="cards">
+ <section class="card selectable" data-card="1">
+  <h2><span class="number">✦ Card 01 ✦</span></h2>
+  <div class="scratch-area">
+   <div class="prize">
+    <span class="emoji">🎨</span>
+    <span>VTuber Model</span><span>Demo Prize</span>
+   </div>
+   <canvas aria-label="Scratch Card 01"></canvas>
+  </div>
+  <p class="hint">✧ Pilih kartu ini ✧</p>
+ </section>
+
+ <section class="card selectable" data-card="2">
+  <h2><span class="number">Card 02</span></h2>
+  <div class="scratch-area">
+   <div class="prize">
+    <span class="emoji">🖌️</span>
+    <span>Half-Body Art</span><span>Demo Prize</span>
+   </div>
+   <canvas aria-label="Scratch Card 02"></canvas>
+  </div>
+  <p class="hint">✧ Pilih kartu ini ✧</p>
+ </section>
+
+ <section class="card selectable" data-card="3">
+  <h2><span class="number">Card 03</span></h2>
+  <div class="scratch-area">
+   <div class="prize">
+    <span class="emoji">🌟</span>
+    <span>Chibi Illustration</span><span>Demo Prize</span>
+   </div>
+   <canvas aria-label="Scratch Card 03"></canvas>
+  </div>
+  <p class="hint">✧ Pilih kartu ini ✧</p>
+ </section>
+</main>
+
+<footer>
+ ✦ Interactive demo only · No real lottery or prize claims ✦
+</footer>
+
+<script>
+const cards = [...document.querySelectorAll(".card")];
+let chosenCard = null;
+
+function setupScratch(card){
+ const canvas = card.querySelector("canvas");
+ const ctx = canvas.getContext("2d");
+ let drawing = false;
+
+ function paintCover(){
+  const rect = canvas.getBoundingClientRect();
+  if(!rect.width || !rect.height) return;
+  const scale = window.devicePixelRatio || 1;
+  canvas.width = rect.width * scale;
+  canvas.height = rect.height * scale;
+  ctx.setTransform(scale,0,0,scale,0,0);
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#aab7d8";
+  ctx.fillRect(0,0,rect.width,rect.height);
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#29234e";
+  ctx.font = "bold 20px Arial";
+  ctx.fillText("SCRATCH HERE",rect.width/2,rect.height/2-5);
+  ctx.font = "26px Arial";
+  ctx.fillText("✦  ✧  ✦",rect.width/2,rect.height/2+30);
+ }
+
+ function scratch(event){
+  if(!drawing || chosenCard !== card) return;
+  event.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.beginPath();
+  ctx.arc(event.clientX-rect.left,event.clientY-rect.top,24,0,Math.PI*2);
+  ctx.fill();
+ }
+
+ canvas.addEventListener("pointerdown",event=>{
+  if(chosenCard !== card) return;
+  drawing = true;
+  canvas.setPointerCapture(event.pointerId);
+  scratch(event);
+ });
+ canvas.addEventListener("pointermove",scratch);
+ canvas.addEventListener("pointerup",()=>drawing=false);
+ canvas.addEventListener("pointercancel",()=>drawing=false);
+
+ paintCover();
+ return paintCover;
+}
+
+const repaintFunctions = new Map();
+cards.forEach(card=>{
+ card.classList.remove("chosen","locked");
+ card.classList.add("selectable");
+ const canvas = card.querySelector("canvas");
+ canvas.style.pointerEvents = "none";
+ repaintFunctions.set(card,setupScratch(card));
+
+ card.addEventListener("click",()=>{
+  if(chosenCard) return;
+  chosenCard = card;
+
+  cards.forEach(other=>{
+   if(other === card){
+    other.classList.add("chosen");
+    other.classList.remove("selectable");
+    other.querySelector(".hint").textContent = "✨ Gosok kartu pilihanmu!";
+    other.querySelector("canvas").style.pointerEvents = "auto";
+   }else{
+    other.classList.remove("selectable");
+    other.classList.add("locked");
+    other.querySelector(".hint").textContent = "🔒 Tidak dipilih";
+   }
+  });
+ });
+});
+
+window.addEventListener("resize",()=>{
+ cards.forEach(card=>{
+  const canvas = card.querySelector("canvas");
+  const ctx = canvas.getContext("2d");
+  const image = ctx.getImageData(0,0,canvas.width,canvas.height);
+  const rect = canvas.getBoundingClientRect();
+  if(!rect.width || !rect.height) return;
+  const scale = window.devicePixelRatio || 1;
+  canvas.width = rect.width*scale;
+  canvas.height = rect.height*scale;
+  ctx.setTransform(scale,0,0,scale,0,0);
+  ctx.putImageData(image,0,0);
+ });
+});
+</script>
+</body>
+</html>
