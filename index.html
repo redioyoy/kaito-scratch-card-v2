@@ -3,169 +3,413 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kaito's Scratch Cards</title>
 <style>
-*{box-sizing:border-box}
-body{
-  margin:0;min-height:100vh;padding:36px 16px;
-  font-family:Arial,sans-serif;color:white;text-align:center;
-  background:radial-gradient(ellipse at top,#344a88 0%,transparent 50%),
-  linear-gradient(135deg,#10152f,#30245b);
+:root {
+  --blue: #65ddff;
+  --purple: #8873ff;
+  --navy: #12152f;
+  --panel: #22264b;
+  --white: #f7f5ff;
 }
-h1{color:#80eaff;font-size:clamp(28px,5vw,44px);margin:10px 0}
-.subtitle{line-height:1.7;color:#eee}
-.cards{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin:34px auto;max-width:1000px}
-.card{
-  width:min(290px,100%);padding:18px 16px;border:1px solid #7969d9;
-  border-radius:24px;background:#ffffff0b;transition:.25s;
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 36px 18px;
+  font-family: Arial, Helvetica, sans-serif;
+  color: var(--white);
+  text-align: center;
+  background:
+    radial-gradient(ellipse at top, #343c79 0%, transparent 55%),
+    linear-gradient(135deg, #10132b, #29204c);
 }
-.card.selectable{cursor:pointer}
-.card.active{border:2px solid #80eaff;box-shadow:0 0 24px #68dfff66;transform:translateY(-4px)}
-.card.unavailable{opacity:.5;cursor:not-allowed}
-.label{display:inline-block;background:#7462d5;padding:9px 18px;border-radius:30px;font-weight:bold}
-.scratch-area{height:190px;margin-top:18px;border-radius:16px;position:relative;overflow:hidden;background:#fff0c8}
-.prize{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#282354;font-size:20px;font-weight:bold;gap:8px;padding:12px}
-.emoji{font-size:32px}
-canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
-.hint{font-size:13px;color:#d9d4ff;margin:14px 0 0}
-button,.claim{display:inline-block;border:0;border-radius:12px;padding:13px 20px;font-weight:bold;font-size:15px;cursor:pointer;text-decoration:none}
-button{background:#80eaff;color:#161537}
-.claim{background:#ffcf70;color:#30245b;margin-top:12px}
-.result{margin:24px auto;padding:20px;max-width:500px;border:1px solid #80eaff;border-radius:18px;background:#ffffff0b}
-.hidden{display:none}
-footer{font-size:12px;color:#bcb6e8;margin-top:30px}
+header { max-width: 760px; margin: 0 auto 32px; }
+h1 {
+  margin: 0 0 16px;
+  font-size: clamp(2rem, 5vw, 3rem);
+  color: var(--blue);
+  text-shadow: 0 0 22px #65ddff40;
+}
+.subtitle { line-height: 1.7; margin: 8px 0; }
+.signature { color: #d5caff; margin-top: 20px; }
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+.card {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid #6555b4;
+  border-radius: 25px;
+  background: #ffffff09;
+  box-shadow: 0 12px 35px #00000016;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+.card:hover { transform: translateY(-3px); }
+.card.selected {
+  border: 2px solid var(--blue);
+  box-shadow: 0 0 25px #65ddff32;
+}
+.card-label {
+  display: inline-block;
+  padding: 9px 18px;
+  margin-bottom: 18px;
+  border-radius: 30px;
+  background: #51499b;
+  font-weight: bold;
+}
+.scratch-area {
+  position: relative;
+  overflow: hidden;
+  min-height: 230px;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #f5efff, #d8eaff);
+  color: #29234d;
+  touch-action: pan-y;
+}
+.offer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+}
+.offer-icon { font-size: 38px; }
+.offer h2 { font-size: 19px; margin: 0; line-height: 1.35; }
+.offer-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: #5140bc;
+  line-height: 1.3;
+}
+.offer p { margin: 0; font-size: 13px; line-height: 1.5; }
+.scratch-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  touch-action: none;
+}
+.scratch-layer.disabled { pointer-events: none; }
+.hint { color: #c6c0ef; font-size: 13px; min-height: 18px; }
+.status {
+  max-width: 650px;
+  margin: 28px auto 0;
+  line-height: 1.6;
+  color: #e5e0ff;
+}
+.actions { margin-top: 16px; }
+.fiverr-link, .reset-button {
+  display: inline-block;
+  border: 0;
+  border-radius: 999px;
+  padding: 13px 22px;
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+}
+.fiverr-link {
+  color: #11162e;
+  background: var(--blue);
+}
+.fiverr-link:hover { background: #a2ecff; }
+.reset-button {
+  margin: 10px 0 0 8px;
+  color: white;
+  background: #51499b;
+}
+.hidden { display: none !important; }
+footer {
+  max-width: 760px;
+  margin: 40px auto 0;
+  padding-top: 20px;
+  border-top: 1px solid #ffffff20;
+  color: #bcb8dc;
+  font-size: 12px;
+  line-height: 1.7;
+}
+@media (max-width: 760px) {
+  .cards { grid-template-columns: 1fr; max-width: 390px; }
+  .card { padding: 16px; }
+  .scratch-area { min-height: 215px; }
+  body { padding: 28px 14px; }
+}
 </style>
 </head>
 <body>
+
 <header>
   <h1>✦ Kaito's Scratch Cards ✦</h1>
-  <p class="subtitle">Choose ONE card and scratch to reveal its demo prize!<br>
-  Pilih SATU kartu, lalu gosok untuk melihat hasil demo.</p>
-  <p>✧ A little magic made by Kaito ✧</p>
+  <p class="subtitle">
+    Choose ONE card and scratch to reveal an offer!<br>
+    Pilih SATU kartu, lalu gosok untuk melihat penawarannya.
+  </p>
+  <p class="signature">✧ A little magic made by Kaito ✧</p>
 </header>
 
 <main class="cards" id="cards">
-  <section class="card selectable" data-id="1">
-    <div class="label">✦ Card 01 ✦</div>
+
+  <section class="card" data-id="1">
+    <div class="card-label">✦ Card 01 ✦</div>
     <div class="scratch-area">
-      <div class="prize">
-  <span class="emoji">🐱</span>
-  <span>VTuber Model + Advanced Rig</span>
-  <span>$450 + Free Asset Toggles</span>
-</div>
+      <div class="offer">
+        <div class="offer-icon">🐱</div>
+        <h2>VTuber Model + Advanced Rig</h2>
+        <div class="offer-value">$450</div>
+        <p>Free Asset Toggles included</p>
+      </div>
+      <canvas class="scratch-layer" aria-label="Scratch card 1"></canvas>
+    </div>
     <p class="hint">✧ Select and scratch ✧</p>
   </section>
-  <section class="card selectable" data-id="2">
-    <div class="label">Card 02</div>
-    <div class="prize">
-  <span class="emoji">😻</span>
-  <span>Anime Illustration</span>
-  <span>$150 + Background</span>
-</div>
-    <p class="hint">✧ Select and scratch ✧</p>
-  </section>
-  <section class="card selectable" data-id="3">
-    <div class="label">Card 03</div>
+
+  <section class="card" data-id="2">
+    <div class="card-label">✦ Card 02 ✦</div>
     <div class="scratch-area">
-     <div class="prize">
-  <span class="emoji">💖</span>
-  <span>All Services</span>
-  <span>40% OFF</span>
-</div>
+      <div class="offer">
+        <div class="offer-icon">🎨</div>
+        <h2>Anime Illustration</h2>
+        <div class="offer-value">$150</div>
+        <p>Background included</p>
+      </div>
+      <canvas class="scratch-layer" aria-label="Scratch card 2"></canvas>
+    </div>
     <p class="hint">✧ Select and scratch ✧</p>
   </section>
+
+  <section class="card" data-id="3">
+    <div class="card-label">✦ Card 03 ✦</div>
+    <div class="scratch-area">
+      <div class="offer">
+        <div class="offer-icon">💖</div>
+        <h2>All Services</h2>
+        <div class="offer-value">40% OFF</div>
+        <p>Discount offer — check terms before ordering</p>
+      </div>
+      <canvas class="scratch-layer" aria-label="Scratch card 3"></canvas>
+    </div>
+    <p class="hint">✧ Select and scratch ✧</p>
+  </section>
+
 </main>
 
-<div id="result" class="result hidden">
-  <h2 id="resultTitle">Card revealed!</h2>
-  <p id="resultText"></p>
-  <a id="claim" class="claim" href="#" target="_blank" rel="noopener">View Fiverr Gig</a>
+<div class="status" id="status" aria-live="polite">
+  Choose a card to begin. You can scratch only one card at a time.
+  <br>Pilih satu kartu untuk mulai.
 </div>
 
-<footer>Interactive demo only. Scratching does not guarantee a real prize or discount.</footer>
+<div class="actions hidden" id="actions">
+  <a class="fiverr-link" id="fiverrLink"
+     href="https://www.fiverr.com/redi_ananda_/"
+     target="_blank" rel="noopener noreferrer">
+    View Fiverr Gig ↗
+  </a>
+  <button class="reset-button" id="resetButton" type="button">
+    Start Again
+  </button>
+</div>
+
+<footer>
+  Made with 💙 by Kaito<br>
+  Interactive offer showcase · Kartu ini menampilkan informasi layanan,
+  bukan undian atau jaminan hadiah.<br>
+  Harga dan diskon mengikuti ketentuan layanan yang berlaku.
+</footer>
 
 <script>
-const cards=[...document.querySelectorAll(".card")];
-let chosen=null;
-let revealed=false;
+const cards = [...document.querySelectorAll(".card")];
+const statusBox = document.getElementById("status");
+const actions = document.getElementById("actions");
+const fiverrLink = document.getElementById("fiverrLink");
+const resetButton = document.getElementById("resetButton");
 
-const prizes=[
- {title:"VTuber Model + Advanced Rig + Free Asset Toggles",value:"Demo value: $450",url:"https://www.fiverr.com/redi_ananda_/draw-high-quality-anime-live2d-vtuber-model-in-anime-style-for-and-stream"},
- {title:"Anime Illustration + Background",value:"Demo value: $150",url:"https://www.fiverr.com/redi_ananda_/draw-anime-art-illustration-fanart-chibi-original-character-and-vtuber-design"},
- {title:"40% OFF All Services",value:"Demo discount — confirm eligibility with Kaito",url:"https://www.fiverr.com/redi_ananda_/draw-high-quality-anime-live2d-vtuber-model-in-anime-style-for-and-stream"}
-];
+const offers = {
+  1: {
+    url: "https://www.fiverr.com/redi_ananda_/draw-high-quality-anime-live2d-vtuber-model-in-anime-style-for-and-stream",
+    message: "VTuber Model + Advanced Rig — $450. Free Asset Toggles included."
+  },
+  2: {
+    url: "https://www.fiverr.com/redi_ananda_/draw-anime-art-illustration-fanart-chibi-original-character-and-vtuber-design",
+    message: "Anime Illustration + Background — $150."
+  },
+  3: {
+    url: "https://www.fiverr.com/redi_ananda_/",
+    message: "40% OFF all services. Please confirm the discount terms before ordering."
+  }
+};
 
-function shuffleCards(){
- const container=document.getElementById("cards");
- for(let i=container.children.length;i>0;i--){
-  container.appendChild(container.children[Math.floor(Math.random()*i)]);
- }
-}
-shuffleCards();
+let selectedCard = null;
+let completed = false;
 
-function setupScratch(card){
- const canvas=card.querySelector("canvas");
- const ctx=canvas.getContext("2d");
- let drawing=false;
- function paint(){
-  const rect=canvas.getBoundingClientRect();
-  if(!rect.width||!rect.height)return;
-  const dpr=window.devicePixelRatio||1;
-  canvas.width=rect.width*dpr;canvas.height=rect.height*dpr;
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.globalCompositeOperation="source-over";
-  ctx.fillStyle="#aab7d8";ctx.fillRect(0,0,rect.width,rect.height);
-  ctx.fillStyle="#282354";ctx.textAlign="center";
-  ctx.font="bold 19px Arial";ctx.fillText("SCRATCH HERE",rect.width/2,rect.height/2);
-  ctx.font="25px Arial";ctx.fillText("✦ ✧ ✦",rect.width/2,rect.height/2+32);
- }
- function scratch(e){
-  if(!drawing||card!==chosen||revealed)return;
-  const rect=canvas.getBoundingClientRect();
-  const x=e.clientX-rect.left,y=e.clientY-rect.top;
-  ctx.globalCompositeOperation="destination-out";
-  ctx.beginPath();ctx.arc(x,y,20,0,Math.PI*2);ctx.fill();
- }
- canvas.addEventListener("pointerdown",e=>{
-  if(card!==chosen||revealed)return;
-  drawing=true;canvas.setPointerCapture(e.pointerId);scratch(e);
- });
- canvas.addEventListener("pointermove",scratch);
- canvas.addEventListener("pointerup",()=>{drawing=false;checkReveal()});
- canvas.addEventListener("pointercancel",()=>drawing=false);
- function checkReveal(){
-  if(!chosen||revealed)return;
-  const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data;
-  let clear=0;
-  for(let i=3;i<pixels.length;i+=16)if(pixels[i]===0)clear++;
-  if(clear/(pixels.length/16)>.28)finish();
- }
- function finish(){
-  revealed=true;
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  cards.forEach(c=>{c.classList.add("unavailable");c.classList.remove("selectable")});
-  const p=prizes[Number(card.dataset.id)-1];
-  document.getElementById("resultTitle").textContent="✨ Demo card revealed!";
-  document.getElementById("resultText").textContent=p.title+" — "+p.value;
-  const link=document.getElementById("claim");
-  link.href=p.url;link.textContent="View Fiverr Gig";
-  document.getElementById("result").classList.remove("hidden");
-  card.querySelector(".hint").textContent="✨ Demo revealed ✨";
- }
- paint();
- window.addEventListener("resize",()=>{if(!revealed)paint()});
-}
-cards.forEach(card=>{
- setupScratch(card);
- card.addEventListener("click",()=>{
-  if(chosen||revealed)return;
-  chosen=card;
-  cards.forEach(c=>{
-   if(c===chosen){c.classList.add("active");c.classList.remove("selectable");c.querySelector(".hint").textContent="✧ Scratch this card ✧";}
-   else{c.classList.add("unavailable");c.classList.remove("selectable");c.querySelector(".hint").textContent="🔒 Not selected";}
+function setupCanvas(card) {
+  const canvas = card.querySelector("canvas");
+  const area = card.querySelector(".scratch-area");
+  const ctx = canvas.getContext("2d");
+  let drawing = false;
+  let lastPoint = null;
+
+  function paintCover() {
+    const rect = area.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    canvas.style.width = rect.width + "px";
+    canvas.style.height = rect.height + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.globalCompositeOperation = "source-over";
+
+    const gradient = ctx.createLinearGradient(0, 0, rect.width, rect.height);
+    gradient.addColorStop(0, "#b9c6e5");
+    gradient.addColorStop(0.5, "#9da8ce");
+    gradient.addColorStop(1, "#d1c7e6");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, rect.width, rect.height);
+
+    ctx.fillStyle = "#302b61";
+    ctx.textAlign = "center";
+    ctx.font = "bold 18px Arial";
+    ctx.fillText("SCRATCH HERE", rect.width / 2, rect.height / 2 - 5);
+    ctx.font = "bold 23px Arial";
+    ctx.fillText("✦ ✧ ✦", rect.width / 2, rect.height / 2 + 28);
+
+    ctx.globalCompositeOperation = "destination-out";
+  }
+
+  function point(event) {
+    const rect = canvas.getBoundingClientRect();
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  }
+
+  function scratch(event) {
+    if (!drawing || selectedCard !== card || completed) return;
+    event.preventDefault();
+    const p = point(event);
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.lineWidth = 34;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+    if (lastPoint) {
+      ctx.moveTo(lastPoint.x, lastPoint.y);
+      ctx.lineTo(p.x, p.y);
+    } else {
+      ctx.arc(p.x, p.y, 17, 0, Math.PI * 2);
+    }
+    ctx.stroke();
+    lastPoint = p;
+    checkProgress();
+  }
+
+  function checkProgress() {
+    const pixels = ctx.getImageData(
+      0, 0, canvas.width, canvas.height
+    ).data;
+    let transparent = 0;
+    const total = pixels.length / 4;
+    for (let i = 3; i < pixels.length; i += 4) {
+      if (pixels[i] < 50) transparent++;
+    }
+    if (transparent / total > 0.42) revealCard(card);
+  }
+
+  canvas.addEventListener("pointerdown", event => {
+    if (completed) return;
+    if (!selectedCard) selectCard(card);
+    if (selectedCard !== card) return;
+    drawing = true;
+    lastPoint = point(event);
+    try { canvas.setPointerCapture(event.pointerId); } catch (_) {}
+    scratch(event);
   });
- });
+
+  canvas.addEventListener("pointermove", scratch);
+  canvas.addEventListener("pointerup", () => {
+    drawing = false;
+    lastPoint = null;
+  });
+  canvas.addEventListener("pointercancel", () => {
+    drawing = false;
+    lastPoint = null;
+  });
+
+  card._paintCover = paintCover;
+  paintCover();
+}
+
+function selectCard(card) {
+  if (selectedCard || completed) return;
+  selectedCard = card;
+  cards.forEach(item => {
+    item.classList.toggle("selected", item === card);
+    const canvas = item.querySelector("canvas");
+    if (item !== card) {
+      canvas.classList.add("disabled");
+      item.querySelector(".hint").textContent = "🔒 Not selected";
+    } else {
+      item.querySelector(".hint").textContent = "✧ Keep scratching! ✧";
+    }
+  });
+  statusBox.textContent =
+    "Card " + card.dataset.id + " selected! Scratch the card to reveal the offer.";
+}
+
+function revealCard(card) {
+  if (completed) return;
+  completed = true;
+  const id = card.dataset.id;
+  const offer = offers[id];
+
+  cards.forEach(item => {
+    item.querySelector("canvas").classList.add("disabled");
+  });
+
+  card.querySelector("canvas").style.opacity = "0";
+  card.querySelector(".hint").textContent = "✦ Offer revealed! ✦";
+  statusBox.textContent = "✦ Offer revealed! ✦ " + offer.message;
+  fiverrLink.href = offer.url;
+  actions.classList.remove("hidden");
+}
+
+function resetCards() {
+  selectedCard = null;
+  completed = false;
+  actions.classList.add("hidden");
+  statusBox.innerHTML =
+    "Choose a card to begin. You can scratch only one card at a time.<br>" +
+    "Pilih satu kartu untuk mulai.";
+
+  cards.forEach(card => {
+    card.classList.remove("selected");
+    card.querySelector("canvas").classList.remove("disabled");
+    card.querySelector("canvas").style.opacity = "1";
+    card.querySelector(".hint").textContent = "✧ Select and scratch ✧";
+    card._paintCover();
+  });
+}
+
+cards.forEach(card => {
+  setupCanvas(card);
+  card.addEventListener("click", event => {
+    if (event.target.tagName === "CANVAS") return;
+    if (!selectedCard && !completed) selectCard(card);
+  });
+});
+
+resetButton.addEventListener("click", resetCards);
+
+window.addEventListener("resize", () => {
+  if (!selectedCard && !completed) {
+    cards.forEach(card => card._paintCover());
+  }
 });
 </script>
 </body>
